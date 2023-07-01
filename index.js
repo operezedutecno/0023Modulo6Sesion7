@@ -18,6 +18,16 @@ const {validate, format} = require("rut.js")
 - En el eliminar si no existe el id en el archivo devolver un mensaje
 */
 
+// Requerimientos Sábado 01/07/2023
+/*
+- Implementar axios
+- Crear un archivo para guardar personajes de star wars
+- Crear una ruta que reciba un id, con ese id consultaremos en la API de star wars y el personaje que nos devuelva
+    lo registraremos en el archivo.(Se puede enviar el id por el body y por el querystring)
+- Se debe validar en el registro si el personaje ya está registrado.
+- Crear una ruta que permita visualizar los personajes ya registrado.
+*/
+
 http.createServer((req, res) => {
     const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`)
     const params = new URLSearchParams(searchParams)
