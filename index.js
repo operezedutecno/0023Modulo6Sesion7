@@ -2,6 +2,7 @@ const http = require("http")
 const path = require("path")
 const fs = require("fs")
 const {v4: uuid} = require("uuid")
+const {validate, format} = require("rut.js")
 
 
 /*
@@ -11,6 +12,7 @@ const {v4: uuid} = require("uuid")
 
 - En el editar no permitir que se reciba el RUT. No se debe avanzar al proceso de edición para este caso
 - En el editar validar que se reciba el ID.
+- Validar cuando el id no exista, devolver un mensaje y no permitir la edición
 
 - En el eliminar si no envian el id en la petición devolver un mensaje
 - En el eliminar si no existe el id en el archivo devolver un mensaje
@@ -36,6 +38,11 @@ http.createServer((req, res) => {
 
         return req.on("end", () => {
             json.id = uuid()
+            if(!validate(json.rut)){
+                res.write("Rut inválido por favor verificar")
+                return res.end()
+            }
+            json.rut = format(json.rut)
             const data = fs.readFileSync(`${__dirname}/data/personas.txt`)
             const arreglo = JSON.parse(data)
             console.log(arreglo);
@@ -60,14 +67,25 @@ http.createServer((req, res) => {
             json = JSON.parse(data)
         })
         return req.on("end", () => {
+            if(json.rut) {
+                res.write("No es posible editar el RUT, corregir la petición")
+                return res.end();
+            }
+            if(!json.id) {
+                res.write("Por favor enviar el id de la persona a modificar")
+                return res.end();
+            }
             const data = fs.readFileSync(`${__dirname}/data/personas.txt`,"utf8")
             const arreglo = JSON.parse(data)
             const indice = arreglo.findIndex(persona => persona.id === json.id)
 
             if(indice !== -1) {
                 arreglo[indice] = { ...arreglo[indice], ...json}
+            } else {
+                res.write("Está intentado modificar un id no existente, por favor verificar")
+                return res.end()
             }
-            //Validar cuando el id no exista, devolver un mensaje y no permitir la edición
+            
             const texto = JSON.stringify(arreglo)
             fs.writeFileSync(`${__dirname}/data/personas.txt`, texto,"utf8")
             res.write("Persona actualizada con éxito")
@@ -78,12 +96,19 @@ http.createServer((req, res) => {
     //Ruta para eliminar personas
     if(pathname === '/personas' && req.method === 'DELETE') {
         const id=params.get("id")
+        if(!id) {
+            res.write("Por favor enviar el id de la persona a eliminar")
+            return res.end();
+        }
         const data = fs.readFileSync(`${__dirname}/data/personas.txt`,"utf8")
         const arreglo = JSON.parse(data)
         const indice = arreglo.findIndex(persona => persona.id == id)
 
         if(indice != -1) {
             arreglo.splice(indice,1)
+        } else {
+            res.write("El id enviado no se encuentra registrado, por favor verificar")
+            return res.end()
         }
         const texto = JSON.stringify(arreglo)
         fs.writeFileSync(`${__dirname}/data/personas.txt`, texto, "utf8")
