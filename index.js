@@ -29,7 +29,7 @@ const axios = require("axios")
 - Crear una ruta que permita visualizar los personajes ya registrados.
 */
 
-http.createServer((req, res) => {
+const servidor = http.createServer((req, res) => {
     const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`)
     const params = new URLSearchParams(searchParams)
     
@@ -177,3 +177,6 @@ http.createServer((req, res) => {
     res.write("Ruta no válida")
     res.end()
 }).listen(3000, () => console.log("Server ejecutando en la ruta http://localhost:3000"))
+
+
+module.exports = { servidor }
