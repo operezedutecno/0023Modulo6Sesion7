@@ -1,1 +1,1 @@
-[{"rut":"55.555.555-5","nombre":"Luis José","apellido":"Rodríguez","id":"8b690511-50fc-4443-a007-c7b9deb235ef"}]
+[{"rut":"55.555.555-5","nombre":"Luis José","apellido":"Rodríguez","id":"8b690511-50fc-4443-a007-c7b9deb235ef"},{"rut":"22.222.222-2","nombre":"María","apellido":"López","id":"4749d687-dd0f-4bb0-b09b-82ae32762f0e"}]

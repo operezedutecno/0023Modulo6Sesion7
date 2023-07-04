@@ -36,6 +36,7 @@ const servidor = http.createServer((req, res) => {
     //Ruta para listar personas
     if(pathname === '/personas' && req.method === 'GET'){
         const data = fs.readFileSync(`${__dirname}/data/personas.txt`)
+        res.writeHead(200, {"Content-type": "application/json"})
         res.write(data)
         return res.end() //Finalización de la petición
     }
@@ -50,13 +51,13 @@ const servidor = http.createServer((req, res) => {
         return req.on("end", () => {
             json.id = uuid()
             if(!validate(json.rut)){
+                res.statusCode = 400
                 res.write("Rut inválido por favor verificar")
                 return res.end()
             }
             json.rut = format(json.rut)
             const data = fs.readFileSync(`${__dirname}/data/personas.txt`)
             const arreglo = JSON.parse(data)
-            console.log(arreglo);
             //Validacion de RUT
             const busqueda = arreglo.some(persona => persona.rut === json.rut)
             if(busqueda) {
@@ -66,7 +67,8 @@ const servidor = http.createServer((req, res) => {
             arreglo.push(json)
             const texto = JSON.stringify(arreglo)
             fs.writeFileSync(`${__dirname}/data/personas.txt`, texto, "utf8")
-            res.write("Persona registrada con éxito")
+            res.writeHead(200, {"Content-type": "application/json"})
+            res.write(JSON.stringify(json))
             res.end() //Finalización de la petición
         })
     }
@@ -79,10 +81,12 @@ const servidor = http.createServer((req, res) => {
         })
         return req.on("end", () => {
             if(json.rut) {
+                res.statusCode = 400
                 res.write("No es posible editar el RUT, corregir la petición")
                 return res.end();
             }
             if(!json.id) {
+                res.statusCode = 400
                 res.write("Por favor enviar el id de la persona a modificar")
                 return res.end();
             }
@@ -93,13 +97,15 @@ const servidor = http.createServer((req, res) => {
             if(indice !== -1) {
                 arreglo[indice] = { ...arreglo[indice], ...json}
             } else {
+                res.statusCode = 400
                 res.write("Está intentado modificar un id no existente, por favor verificar")
                 return res.end()
             }
             
             const texto = JSON.stringify(arreglo)
             fs.writeFileSync(`${__dirname}/data/personas.txt`, texto,"utf8")
-            res.write("Persona actualizada con éxito")
+            res.writeHead(200, { "Content-type":"application/json"})
+            res.write(JSON.stringify(arreglo[indice]))
             return res.end()
         })
     }
@@ -108,6 +114,7 @@ const servidor = http.createServer((req, res) => {
     if(pathname === '/personas' && req.method === 'DELETE') {
         const id=params.get("id")
         if(!id) {
+            res.statusCode = 400
             res.write("Por favor enviar el id de la persona a eliminar")
             return res.end();
         }
@@ -118,6 +125,7 @@ const servidor = http.createServer((req, res) => {
         if(indice != -1) {
             arreglo.splice(indice,1)
         } else {
+            res.statusCode = 404
             res.write("El id enviado no se encuentra registrado, por favor verificar")
             return res.end()
         }
