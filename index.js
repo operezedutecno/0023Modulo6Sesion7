@@ -3,6 +3,7 @@ const path = require("path")
 const fs = require("fs")
 const {v4: uuid} = require("uuid")
 const {validate, format} = require("rut.js")
+const axios = require("axios")
 
 
 /*
@@ -25,7 +26,7 @@ const {validate, format} = require("rut.js")
 - Crear una ruta que reciba un id, con ese id consultaremos en la API de star wars y el personaje que nos devuelva
     lo registraremos en el archivo.(Se puede enviar el id por el body y por el querystring)
 - Se debe validar en el registro si el personaje ya está registrado.
-- Crear una ruta que permita visualizar los personajes ya registrado.
+- Crear una ruta que permita visualizar los personajes ya registrados.
 */
 
 http.createServer((req, res) => {
@@ -123,6 +124,53 @@ http.createServer((req, res) => {
         const texto = JSON.stringify(arreglo)
         fs.writeFileSync(`${__dirname}/data/personas.txt`, texto, "utf8")
         res.write("Persona eliminada con éxito")
+        return res.end()
+    }
+
+    // Agregar personajes de Star Wars
+    if(pathname === '/star-wars/agregar' && req.method === 'POST') {
+        let json
+        req.on("data", (datos) => {
+            json = JSON.parse(datos)
+        })
+        return req.on("end", async () => {
+            try {
+                if(json.id === undefined){
+                    res.write("Por favor enviar el id del personaje")
+                    return res.end()
+                }
+                const id = json.id
+                const respuesta = await axios.get(`https://swapi.dev/api/people/${id}`)
+
+                const datos = fs.readFileSync(`${__dirname}/data/starwars.txt`,"utf8")
+                const arreglo = JSON.parse(datos)
+                const validacion = arreglo.some(personaje => personaje.url === respuesta.data.url)
+
+                if(validacion){
+                    res.write("El personaje fue registrado previamente")
+                    return res.end()
+                }
+
+                arreglo.push(respuesta.data)
+                const texto = JSON.stringify(arreglo)
+                fs.writeFileSync(`${__dirname}/data/starwars.txt`, texto, "utf8")
+                res.write(`Personaje Star Wars agregado con éxito ${respuesta.data.name}`);
+                return res.end();
+            } catch (error) {
+                if(error.response.status === 404) {
+                    res.write("Imposible conseguir los datos del personaje");    
+                } else {
+                    res.write("Ocurrió un error consultando la API de Star Wars");
+                }
+                return res.end();
+            }
+        })
+    }
+
+    // Listar Personajes de Star Wars
+    if(pathname === '/star-wars/listar' && req.method === 'GET') {
+        const datos = fs.readFileSync(`${__dirname}/data/starwars.txt`,"utf8")
+        res.write(datos)
         return res.end()
     }
 
