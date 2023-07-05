@@ -49,6 +49,12 @@ const servidor = http.createServer((req, res) => {
         })
 
         return req.on("end", () => {
+
+            if(json.rut === undefined || json.nombre === undefined || json.apellido === undefined) {
+                res.statusCode = 400
+                res.write("La petición debe contener rut, nombre y apellido")
+                return res.end()
+            }
             json.id = uuid()
             if(!validate(json.rut)){
                 res.statusCode = 400
